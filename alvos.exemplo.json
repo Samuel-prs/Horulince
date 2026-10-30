@@ -1,0 +1,4 @@
+[
+  {"id": "caso_ficticio_01", "tipo": "carro", "cor": "branco", "placa": "ABC1D23"},
+  {"id": "caso_ficticio_02", "tipo": "moto", "cor": "preto", "placa": "XYZ1234"}
+]
