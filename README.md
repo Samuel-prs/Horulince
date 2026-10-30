@@ -1,18 +1,3 @@
-# Implementação local disponível
-
-O painel funcional em Python, SQLite e HTML/CSS/JavaScript está integrado neste repositório. Inclui análise de veículos, OCR, câmera de rede/iPhone, revisão humana, auditoria, avaliação experimental, demonstrações de detecção/captura facial autorizada e acervo pesquisável. Identificação de pessoas e emoções não estão implementadas.
-
-- [Instalação e execução da implementação atual](GUIA_EXECUCAO.md)
-- [Guia do painel](PAINEL.md) e [demonstrações e acervo](DEMONSTRACOES.md)
-- [Scripts SQLite e instruções para o DBA](banco/LEIA-ME_DBA.md)
-- [Documentação original e arquitetura planejada](horulince/README.md)
-
-Execute `iniciar_painel.cmd` após instalar as dependências e disponibilizar o modelo local conforme o guia. Modelos, vídeos, bancos locais, capturas e saídas de validação não são versionados.
-
-A documentação original abaixo descreve a proposta geral, incluindo componentes futuros como React/API/MySQL. A implementação executável atual utiliza SQLite; os esquemas MySQL em `horulince/database/` foram preservados como referência e não são utilizados pelo painel local.
-
----
-
 [README.md](https://github.com/user-attachments/files/34156174/README.md)
 # Horulince
 
@@ -163,3 +148,25 @@ O projeto segue os princípios da **LGPD (Lei nº 13.709/2018)** como requisitos
 ## 📄 Licença
 
 Distribuído sob a licença **MIT** (ajuste conforme decisão do grupo). Veja [`LICENSE`](LICENSE).
+
+---
+
+# Implementação local disponível
+
+O painel funcional em Python, SQLite e HTML/CSS/JavaScript está integrado neste repositório. Inclui análise de veículos, OCR, câmera de rede/iPhone, revisão humana, auditoria, avaliação experimental, demonstrações de detecção/captura facial autorizada e acervo pesquisável. Identificação de pessoas e emoções não estão implementadas.
+
+- [Instalação e execução da implementação atual](GUIA_EXECUCAO.md)
+- [Guia do painel](PAINEL.md) e [demonstrações e acervo](DEMONSTRACOES.md)
+- [Scripts SQLite e instruções para o DBA](banco/LEIA-ME_DBA.md)
+- [Documentação original e arquitetura planejada](horulince/README.md)
+
+Execute `iniciar_painel.cmd` após instalar as dependências e disponibilizar o modelo local conforme o guia. Modelos, vídeos, bancos locais, capturas e saídas de validação não são versionados.
+
+A documentação original abaixo descreve a proposta geral, incluindo componentes futuros como React/API/MySQL. A implementação executável atual utiliza SQLite; os esquemas MySQL em `horulince/database/` foram preservados como referência e não são utilizados pelo painel local.
+
+
+
+
+
+
+
