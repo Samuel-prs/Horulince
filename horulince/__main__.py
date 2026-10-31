@@ -29,6 +29,7 @@ def parser():
     process.add_argument("--max-quadros", type=int, default=0, help="0 = até terminar ou Q")
     process.add_argument("--mostrar", action="store_true")
     process.add_argument("--sem-ocr", action="store_true", help="Somente características; não aceita alvo com placa")
+    process.add_argument("--registrar-placas", action="store_true", help="Salvar leituras consolidadas e recortes mesmo sem correspondência com alvos")
     process.add_argument("--relatorio", default=str(ROOT / "dados/ultima_execucao.json"))
     listing = commands.add_parser("alertas", help="Listar evidências e candidatos")
     listing.add_argument("--estado", choices=sorted(STATES | {"pendente"}))

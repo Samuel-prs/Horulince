@@ -62,6 +62,8 @@ Não existe FK entre `alerts.run` e `runs.id`: alertas são salvos durante o pro
 
 ## Arquivos externos e operação
 
+O OCR usa a extensão `plate_reads`, criada por `atualizar_ocr_sqlite.sql` e pelo script completo. Colunas: `id` (PK), `run`, `track`, `source`, `video_seconds`, `created_at`, `plate`, `evidence` e `payload` (JSON). A combinação `(run,track,plate)` é única. O estado no payload distingue `pendente_consenso` de `consolidada`; as imagens ficam em `placas/`, ao lado do banco. A execução é resumida somente ao encerrar, portanto `run` não tem FK neste fluxo. Veja `OCR.md` para finalidade, limites e procedimento de teste.
+
 As demonstrações usam duas tabelas adicionais: `demo_runs` guarda `id`, `mode`, `source`, `started_at`, `finished_at`, `state`, `configuration` (JSON) e `summary` (JSON); `demo_events` guarda `id`, `run` (FK para `demo_runs.id`), `kind`, `source`, `created_at`, `video_seconds`, `image` (caminho opcional) e `payload` (JSON). A execução é criada antes dos seus eventos. Não há exclusão em cascata. Imagens demonstrativas ficam em `demonstracoes/imagens/`, ao lado do banco, e precisam acompanhar o backup.
 
 - As imagens ficam em `evidencias/`, ao lado do banco. Ao migrar, preserve os arquivos e ajuste os caminhos em `alerts.evidence` se a localização mudar. O painel só entrega evidências dentro dessa pasta.

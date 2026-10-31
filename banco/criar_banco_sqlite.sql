@@ -70,6 +70,15 @@ CREATE TABLE IF NOT EXISTS demo_events (
 CREATE INDEX IF NOT EXISTS idx_demo_events_run ON demo_events(run);
 CREATE INDEX IF NOT EXISTS idx_demo_events_created ON demo_events(created_at);
 
+-- Leituras de placa, independentes dos alertas de correspondencia.
+CREATE TABLE IF NOT EXISTS plate_reads (
+    id TEXT PRIMARY KEY, run TEXT NOT NULL, track INTEGER NOT NULL,
+    source TEXT NOT NULL, video_seconds REAL NOT NULL, created_at TEXT NOT NULL,
+    plate TEXT NOT NULL, evidence TEXT NOT NULL, payload TEXT NOT NULL,
+    UNIQUE(run,track,plate)
+);
+CREATE INDEX IF NOT EXISTS idx_plate_reads_plate ON plate_reads(plate,created_at);
+
 COMMIT;
 
 -- Verificação: deve retornar "ok" e nenhuma linha, respectivamente.

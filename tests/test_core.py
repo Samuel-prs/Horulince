@@ -46,6 +46,17 @@ class PlateTests(unittest.TestCase):
         self.assertEqual(match["correspondencia"], "aproximada")
         self.assertNotIn("confianca", match)
 
+    def test_failures_before_a_plate_appears_do_not_penalize_its_first_reads(self):
+        votes=PlateVotes()
+        for _ in range(8):
+            votes.add(None,0)
+        for _ in range(3):
+            votes.add("ABC1D23",80)
+        self.assertEqual(votes.consensus()["leituras"],3)
+        for _ in range(3):
+            votes.add(None,0)
+        self.assertIsNone(votes.consensus())
+
 
 class TrackingTests(unittest.TestCase):
     def test_ids_and_readings_do_not_leak_between_vehicles(self):

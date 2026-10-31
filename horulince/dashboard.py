@@ -19,7 +19,7 @@ from .core import COLORS, VEHICLES
 from .evaluation import evaluate
 from .pipeline import ROOT, load_targets
 from .sources import validate_phone_url
-from .storage import AlertStore
+from .storage import AlertStore, ReviewConflict
 from .demonstration import DemoArchive, run_demo
 
 WEB = Path(__file__).parent / "web"
@@ -177,6 +177,7 @@ class Dashboard:
             args.imgsz = number(data.get("image_size", 480), "Resolução da inferência", 320, 1280)
             args.limiar = number(data.get("threshold", .7), "Compatibilidade", 0, 1, False)
             args.sem_ocr = bool(data.get("no_ocr", False))
+            args.registrar_placas = bool(data.get("save_plates", True)) and not args.sem_ocr
             args.targets = self.targets()
             load_targets(args)
             if args.sem_ocr and any(t["placa"] for t in args.targets):
@@ -402,11 +403,14 @@ def handler_for(app):
                     app.jobs.stop()
                     return self.respond(app.jobs.snapshot())
                 if route == "/api/review":
-                    app.store.review(str(data.get("id", "")), str(data.get("state", "")), str(data.get("actor", "")), str(data.get("reason", "")))
+                    app.store.review(str(data.get("id", "")), data.get("state", ""), data.get("actor", ""), data.get("reason", ""),
+                                     expected_state=data.get("expected_state"))
                     return self.respond({"ok": True})
                 if route == "/api/evaluate":
                     return self.respond(app.evaluate(data))
                 return self.respond({"error": "Ação não encontrada"}, status=404)
+            except ReviewConflict as error:
+                return self.respond({"error": str(error)}, status=409)
             except (ValueError, TypeError, AttributeError, OSError, sqlite3.Error) as error:
                 return self.respond({"error": str(error)}, status=400)
     return Handler

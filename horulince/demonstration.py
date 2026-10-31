@@ -81,6 +81,16 @@ class DemoArchive:
         if not 1 <= limit <= 200 or offset < 0:
             raise ValueError("Paginação fora do limite")
         clauses, values = [], []
+        if filters.get("plate"):
+            import re
+            from .core import normalize_plate, valid_plate
+            raw = str(filters["plate"])
+            plate = normalize_plate(raw)
+            if re.search(r"[^A-Za-z0-9\s-]", raw) or not valid_plate(plate):
+                raise ValueError("Placa inválida: informe ABC1234 ou ABC1D23")
+            # Somente a placa consolidada no payload, nunca menções em justificativas.
+            clauses.append("json_extract(payload, '$.placa') = ?")
+            values.append(plate)
         for field in ("kind", "source", "run", "id"):
             if filters.get(field):
                 clauses.append(f"{field} = ?")
@@ -105,6 +115,12 @@ class DemoArchive:
                       UNION ALL
                       SELECT 'alert:' || id, run, 'alerta_veiculo', source, created_at,
                              video_seconds, evidence, payload, state FROM alerts
+                      UNION ALL
+                      SELECT 'plate:' || id, run,
+                             CASE WHEN json_extract(payload,'$.estado_leitura')='consolidada'
+                                  THEN 'leitura_placa' ELSE 'leitura_placa_pendente' END,
+                             source, created_at, video_seconds, evidence, payload,
+                             COALESCE(json_extract(payload,'$.estado_leitura'),'pendente_consenso') FROM plate_reads
                       UNION ALL
                       SELECT 'audit:' || audit.seq, alerts.run, 'revisao_alerta', alerts.source,
                              audit.at, alerts.video_seconds, NULL,
@@ -137,6 +153,9 @@ class DemoArchive:
             elif prefix == "alert":
                 row = db.execute("SELECT evidence FROM alerts WHERE id=?", (key,)).fetchone()
                 root = self.store.evidence_dir.resolve()
+            elif prefix == "plate":
+                row = db.execute("SELECT evidence FROM plate_reads WHERE id=?", (key,)).fetchone()
+                root = self.store.plate_dir.resolve()
             else:
                 return None
         if row and row[0]:

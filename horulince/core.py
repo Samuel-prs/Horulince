@@ -55,8 +55,15 @@ class PlateVotes:
     readings: deque = field(default_factory=deque)
 
     def add(self, plate, confidence):
+        reading = plate if plate and valid_plate(plate) else None
+        # Sem leitura anterior não há hipótese para confirmar ou expirar.
+        # Falhas antes de a placa ficar visível não penalizam a primeira hipótese.
+        if not any(p for p, _ in self.readings):
+            self.readings.clear()
+        if reading is None and not self.readings:
+            return
         # None também ocupa um lugar na janela: leituras antigas perdem validade.
-        self.readings.append((plate if plate and valid_plate(plate) else None, confidence))
+        self.readings.append((reading, confidence))
         while len(self.readings) > self.window:
             self.readings.popleft()
 
@@ -92,6 +99,7 @@ class Track:
     hits: int = 1
     last_ocr_frame: int = -1
     last_ocr_seconds: float = -1
+    ocr_diagnostics: dict = field(default_factory=dict)
 
 
 class Tracker:

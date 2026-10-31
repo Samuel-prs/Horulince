@@ -136,6 +136,7 @@ class DashboardHTTPTests(unittest.TestCase):
     def test_demo_endpoints_validate_and_archive_serves_only_registered_images(self):
         status, _ = self.request("POST", "/api/demo/start", {"source_type": "webcam", "mode": "facial", "authorized": False})
         self.assertEqual(status, 400)
+
         status, _ = self.request("POST", "/api/demo/capture", {})
         self.assertEqual(status, 400)
         run = self.app.archive.begin("veiculos", "teste_sintetico", {})
@@ -152,3 +153,42 @@ class DashboardHTTPTests(unittest.TestCase):
         self.assertEqual(status, 404)
         status, _ = self.request("GET", "/api/captures?since=invalid")
         self.assertEqual(status, 400)
+
+    def test_final_review_returns_conflict_and_null_actor_is_not_a_name(self):
+        def evidence(path):
+            Path(path).write_bytes(b"synthetic evidence")
+            return True
+        alert, _ = self.app.store.create(run="teste", track=1, target="ficticio", source="video", video_seconds=0,
+                                          payload={"placa": "ABC1D23"}, write_evidence=evidence)
+        body = {"id": alert, "state": "descartado", "actor": None, "reason": "Teste"}
+        status, _ = self.request("POST", "/api/review", body)
+        self.assertEqual(status, 400)
+        body.update(actor="operador_teste", expected_state="pendente")
+        status, _ = self.request("POST", "/api/review", body)
+        self.assertEqual(status, 200)
+        body["state"] = "confirmado_para_analise"
+        status, _ = self.request("POST", "/api/review", body)
+        self.assertEqual(status, 409)
+        self.assertEqual(len(self.app.store.audit(alert)), 2)
+        status, data = self.request("GET", "/api/captures?plate=abc-1d23")
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(data)["total"], 1)
+
+    def test_plate_capture_has_an_explicit_state_and_an_image_without_an_alert(self):
+        def writer(path):
+            Path(path).write_bytes(b"synthetic plate crop")
+            return True
+        payload={"placa":"ABC1D23","confianca_ocr":85,"estado_leitura":"pendente_consenso","quadro":1}
+        args=dict(run="ocr",track=1,source="video_teste",video_seconds=1,payload=payload,write_evidence=writer)
+        identifier,_=self.app.store.record_plate(**args)
+        status,body=self.request("GET","/api/captures?kind=leitura_placa_pendente&plate=ABC1D23")
+        self.assertEqual(status,200)
+        self.assertEqual(json.loads(body)["total"],1)
+        self.assertEqual(self.app.store.list(),[])
+        status,body=self.request("GET","/api/capture-image/plate:"+identifier)
+        self.assertEqual((status,body),(200,b"synthetic plate crop"))
+        payload=payload | {"estado_leitura":"consolidada","consolidacao":{"leituras":3,"tentativas":3,"confianca_ocr_media":85}}
+        self.app.store.record_plate(**(args | {"payload":payload}))
+        status,body=self.request("GET","/api/captures?kind=leitura_placa&plate=ABC1D23")
+        self.assertEqual(status,200)
+        self.assertEqual(json.loads(body)["items"][0]["category"],"consolidada")
