@@ -130,11 +130,11 @@ A borda envia ao servidor central **apenas metadados e recortes**, não o vídeo
 
 | Integrante | Responsabilidade | GitHub |
 |-----------|------------------|--------|
-| Samuel Paris Fernandes Bueno | Coordenação, banco de dados e integração | [@Samuel-prs](https://github.com/Samuel-prs) |
-| Brendom Vinicius Ortiz Siqueira | IA e visão computacional | [@usuario](https://github.com/BrendomSiqueira) |
-| Gianlucca Soncini de Lima e Silva | Back-end e regras de correspondência | [@usuario](https://github.com/Gianlucca-Soncini) |
-| Rafael Martins de Souza | Telas e usabilidade | [@usuario](https://github.com/rafaelsouza283) |
-| Pedro Henrique Da Cunha Corsi | Testes, proteção de dados e documentação | [@usuario](https://github.com/PedroCorsi) |
+| Samuel Paris Fernandes Bueno | Coordenação, banco de dados e integração | [@Samuel Paris](https://github.com/Samuel-prs) |
+| Brendom Vinicius Ortiz Siqueira | IA e visão computacional | [@Brendom Vinicius](https://github.com/BrendomSiqueira) |
+| Gianlucca Soncini de Lima e Silva | Back-end e regras de correspondência | [@GianLucca de Lima](https://github.com/Gianlucca-Soncini) |
+| Rafael Martins de Souza | Telas e usabilidade | [@Rafael Martins](https://github.com/rafaelsouza283) |
+| Pedro Henrique Da Cunha Corsi | Testes, proteção de dados e documentação | [@Pedro Corsi](https://github.com/PedroCorsi) |
 
 ## 🤝 Como contribuir
 
