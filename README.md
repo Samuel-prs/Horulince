@@ -15,7 +15,7 @@ O Horulince é um projeto da **Fatec Franca "Dr. Thomaz Novelino"** (Análise e 
 
 A localização de veículos e de pessoas desaparecidas depende, em grande parte, da observação humana de imagens e de registros dispersos. O Horulince analisa imagens continuamente, aponta **candidatos a correspondência** e os apresenta a um operador, que valida ou descarta cada caso. O sistema produz **indícios, nunca certezas**.
 
-O artigo completo está em [`docs/Artigo HoruLince.pdf/`](docs/Artigo/).
+O artigo completo está em [`docs/artigo/Artigo_HoruLince.pdf`](docs/artigo/Artigo_HoruLince.pdf).
 
 ## 🧭 Estado atual do repositório
 
