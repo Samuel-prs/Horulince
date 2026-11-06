@@ -1,5 +1,8 @@
 # Horulince
 
+Os [exemplos da API criada por Gian](exemplos/api-gian/) estão disponíveis para
+consulta do grupo, com código original, testes e instruções de demonstração.
+
 > Sistema inteligente para auxiliar na localização de veículos roubados ou furtados e de pessoas desaparecidas, com supervisão humana obrigatória e proteção de dados pessoais.
 
 ![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
