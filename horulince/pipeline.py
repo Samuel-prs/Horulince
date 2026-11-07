@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from collections import Counter
 import json
 from pathlib import Path
 import time
@@ -54,12 +55,13 @@ def run(args, *, on_frame=None, on_progress=None, stop_event=None):
     source = int(args.fonte) if args.fonte.isdigit() else args.fonte
     source_id = args.origem or (f"camera:{source}" if isinstance(source, int) else Path(source).name if "://" not in source else "camera_rede")
     run_id = getattr(args, "run_id", None) or uuid.uuid4().hex
-    frame = cycle = alert_count = processed = 0
+    frame = cycle = alert_count = processed = plate_count = ocr_attempts = ocr_valid = 0
     total_ms = 0.0
     store = AlertStore(args.banco)
     stats_path = Path(args.relatorio).resolve()
     stats_path.parent.mkdir(parents=True, exist_ok=True)
     emitted = set()
+    consolidated_plates = set()
     capture = open_source(source)
     failure = None
     cancelled = False
@@ -124,11 +126,31 @@ def run(args, *, on_frame=None, on_progress=None, stop_event=None):
                 if track.last_ocr_seconds >= 0 and seconds - track.last_ocr_seconds > 2:
                     track.votes.readings.clear()
                 if not args.sem_ocr and track.id in selected:
-                    plate, confidence = read_plate(crop, plate_model)
+                    track.ocr_diagnostics = {}
+                    plate, confidence = read_plate(crop, plate_model, diagnostics=track.ocr_diagnostics)
+                    ocr_attempts += 1
+                    ocr_valid += int(plate is not None)
                     track.votes.add(plate, confidence)
                     track.last_ocr_frame = frame
                     track.last_ocr_seconds = seconds
                 consensus = track.votes.consensus()
+                if (getattr(args, "registrar_placas", False) and track.id in selected
+                        and track.ocr_diagnostics.get("status") == "leitura_valida"):
+                    observed_plate = track.ocr_diagnostics["candidata"]
+                    confirmed = bool(consensus and consensus["placa"] == observed_plate)
+                    px1,py1,px2,py2 = track.ocr_diagnostics["regiao"]
+                    plate_crop = crop[py1:py2,px1:px2]
+                    _, created = store.record_plate(run=run_id,track=track.id,source=source_id,video_seconds=seconds,
+                        payload={"placa":observed_plate,"consolidacao":consensus if confirmed else None,"quadro":frame,
+                                 "estado_leitura":"consolidada" if confirmed else "pendente_consenso",
+                                 "confianca_ocr":track.ocr_diagnostics["confianca"],
+                                 "box_veiculo":list(detection["box"]),"regiao_placa":track.ocr_diagnostics["regiao"],
+                                 "localizacao_placa":track.ocr_diagnostics["metodo"],
+                                 "nota":"Leitura OCR; confira o estado de consenso. Não indica restrição nem identificação definitiva."},
+                        write_evidence=lambda path: cv2.imwrite(path,plate_crop))
+                    plate_count += int(created)
+                    if confirmed:
+                        consolidated_plates.add((track.id,observed_plate))
                 labels = []
                 for target in targets:
                     key = (track.id, target["id"])
@@ -146,7 +168,9 @@ def run(args, *, on_frame=None, on_progress=None, stop_event=None):
                         print(f"CANDIDATO {alert_id} | {source_id} {seconds:.2f}s | {match['correspondencia']} | placa={match['placa'] or '-'}", flush=True)
                 live_results.append({"track": track.id, "tipo": detection["tipo"], "box": list(detection["box"]),
                                      "cores": colors, "confianca_deteccao": detection["confianca_deteccao"],
-                                     "placa": consensus["placa"] if consensus else None, "correspondencias": labels})
+                                     "placa": consensus["placa"] if consensus else None, "correspondencias": labels,
+                                     "ocr": (track.ocr_diagnostics or {"status":"veiculo_pequeno" if x2-x1<120 else "aguardando_ocr"}) if not args.sem_ocr else {"status":"desabilitado"},
+                                     "leituras_consistentes": consensus["leituras"] if consensus else max(Counter(p for p,_ in track.votes.readings if p).values(),default=0)})
                 if args.mostrar or on_frame is not None:
                     color = (0, 200, 255) if labels else (160, 160, 160)
                     cv2.rectangle(image, (x1, y1), (x2, y2), color, 2)
@@ -157,7 +181,7 @@ def run(args, *, on_frame=None, on_progress=None, stop_event=None):
             if on_frame:
                 on_frame(image)
             if on_progress:
-                on_progress({"execucao": run_id, "origem": source_id, "fase": "analisando", "quadros_lidos": frame, "quadros_processados": processed, "alertas": alert_count, "veiculos_no_quadro": len(detections), "instante_video": round(seconds, 2), "processamento_medio_ms": round(total_ms / processed, 2), "deteccoes": live_results, "fps_processamento": round(processed / max(time.monotonic() - started, .001), 2)})
+                on_progress({"execucao": run_id, "origem": source_id, "fase": "analisando", "quadros_lidos": frame, "quadros_processados": processed, "alertas": alert_count, "veiculos_no_quadro": len(detections), "instante_video": round(seconds, 2), "processamento_medio_ms": round(total_ms / processed, 2), "deteccoes": live_results, "fps_processamento": round(processed / max(time.monotonic() - started, .001), 2), "tentativas_ocr":ocr_attempts,"leituras_validas_ocr":ocr_valid,"placas_salvas":plate_count,"placas_consolidadas":len(consolidated_plates)})
             if args.mostrar:
                 cv2.imshow("Horulince - candidatos para revisao", image)
                 if cv2.waitKey(1) & 0xFF == ord("q"):
@@ -171,7 +195,9 @@ def run(args, *, on_frame=None, on_progress=None, stop_event=None):
             cv2.destroyAllWindows()
     report = {"execucao": run_id, "origem": source_id, "quadros_lidos": frame, "quadros_processados": processed, "alertas": alert_count, "reconexoes": getattr(capture, "reconnections", 0), "processamento_medio_ms": round(total_ms / processed, 2) if processed else None, "precisao": None, "revocacao": None, "nota": "Tempo de processamento local; não mede latência de rede ou revisão. Qualidade exige referência anotada."}
     report["estado_execucao"] = "erro" if failure else "interrompida" if cancelled else "concluida"
-    store.record_run(report, {"alvos": targets, "a_cada": args.a_cada, "ocr_a_cada": args.ocr_a_cada, "imgsz": args.imgsz, "sem_ocr": args.sem_ocr, "limiar_caracteristicas": args.limiar, "modelo": model_path.name, "modelo_placa": Path(args.modelo_placa).name if args.modelo_placa else None})
+    report.update(tentativas_ocr=ocr_attempts,leituras_validas_ocr=ocr_valid,placas_salvas=plate_count)
+    report["placas_consolidadas"] = len(consolidated_plates)
+    store.record_run(report, {"alvos": targets, "a_cada": args.a_cada, "ocr_a_cada": args.ocr_a_cada, "imgsz": args.imgsz, "sem_ocr": args.sem_ocr,"registrar_placas":getattr(args,"registrar_placas",False), "limiar_caracteristicas": args.limiar, "modelo": model_path.name, "modelo_placa": Path(args.modelo_placa).name if args.modelo_placa else None})
     stats_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False, indent=2))
     if failure is not None:

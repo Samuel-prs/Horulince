@@ -1,5 +1,7 @@
 # Central de testes do Horulince
 
+Para diagnosticar ou capturar placas, consulte [OCR.md](OCR.md). A Central mostra o estado das tentativas e o acervo distingue leituras aguardando consenso de placas consolidadas.
+
 As abas **Demonstrações legadas** e **Acervo de capturas** integram detecção/captura facial autorizada, extração de veículos e consulta de imagens/eventos. Consulte [DEMONSTRACOES.md](DEMONSTRACOES.md) para instruções e limites. Reinicie o servidor do painel após atualizar o código.
 
 Na pasta deste projeto, execute `iniciar_painel.cmd` com duplo clique ou use:
@@ -49,3 +51,10 @@ A identificação de pessoas permanece indisponível: o detector de rostos não
 realiza reconhecimento de identidade. Também não há autenticação de operadores, perfis,
 retenção automática ou auditoria inviolável. O nome de operador é uma declaração
 local, e não uma identidade autenticada.
+
+
+## Revisões finais e consulta por placa
+
+Alertas confirmados para análise ou descartados mantêm a decisão final e deixam de oferecer o formulário de revisão. Tentativas de sobrescrita retornam HTTP 409; mudanças de estado em outra sessão exigem atualizar e conferir novamente. O operador continua sendo uma declaração local, sem autenticação.
+
+No Acervo de capturas, use Placa exata para consultar as leituras consolidadas armazenadas, combinando com origem, data e demais filtros. A consulta não depende de cadastro e não representa todas as passagens da fonte.

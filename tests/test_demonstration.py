@@ -110,6 +110,12 @@ class DemoTests(unittest.TestCase):
                           payload={"placa": "ABC1D23"}, write_evidence=evidence)
         self.assertEqual(self.archive.query({"run": "pipeline"})["total"], 2)
         self.assertEqual(self.archive.query({"q": "ABC1D23"})["total"], 1)
+        self.assertEqual(self.archive.query({"plate": "abc-1d23"})["total"], 1)
+        self.assertEqual(self.archive.query({"plate": "XYZ1234"})["total"], 0)
+        self.store.review(self.store.list()[0]["id"], "descartado", "Ana", "Cita XYZ1234 sem observar essa placa")
+        self.assertEqual(self.archive.query({"plate": "XYZ1234"})["total"], 0)
+        with self.assertRaises(ValueError):
+            self.archive.query({"plate": "ABC!1D23"})
         self.assertEqual(self.archive.query({"source": "' OR 1=1 --"})["total"], 0)
         first = self.archive.query({"limit": "1"})
         second = self.archive.query({"limit": "1", "offset": "1"})

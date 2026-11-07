@@ -20,7 +20,7 @@ A extração demonstrativa usa YOLOv8n e cores por HSV. Não usa alvos nem faz O
 
 A aba **Acervo de capturas** reúne evidências e resultados dos candidatos do pipeline principal, detecções faciais por quadro (incluindo zero rostos), capturas faciais autorizadas, detecções/recortes de veículos e eventos de criação/revisão dos alertas.
 
-Filtre por tipo, origem exata, identificador completo da execução, intervalo de datas UTC, trecho dos dados e presença de imagem. Os resultados têm paginação de 30 registros. **Consultar**, no histórico da demonstração, preenche o filtro de execução. Selecione um registro para ver imagem, dados completos em JSON e download individual. **Exportar consulta** exporta todos os metadados do filtro, inclusive os que não estão na página atual; as imagens são baixadas individualmente.
+Filtre por tipo, placa exata consolidada (ABC1234 ou ABC1D23), origem exata, identificador completo da execução, intervalo de datas UTC, trecho dos dados e presença de imagem. Os resultados têm paginação de 30 registros. **Consultar**, no histórico da demonstração, preenche o filtro de execução. Selecione um registro para ver imagem, dados completos em JSON e download individual. **Exportar consulta** exporta todos os metadados do filtro, inclusive os que não estão na página atual; as imagens são baixadas individualmente.
 
 As consultas recuperam o que esta versão efetivamente gravou. Não importam automaticamente CSVs ou fotos antigas, não reconstroem detecções de execuções anteriores e não guardam cópia integral de cada vídeo/quadro. Evidências do pipeline principal continuam sendo gravadas somente para candidatos.
 
